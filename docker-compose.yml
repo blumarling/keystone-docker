@@ -1,0 +1,51 @@
+version: '3.7'
+# Redis container
+services:
+  redis:
+    image: redis
+    container_name: keystone-cache
+    volumes:
+      - db-redis:/data:delegated
+    expose:
+      - 6379
+    ports:
+      - 6379:6379
+
+  mongo:
+    image: mongo
+    container_name: keystone-mongo
+    restart: always
+    volumes:
+      - db-mongo:/data/db:delegated
+    expose:
+      - 27017
+    ports:
+      - 27019:27017
+
+  app:
+    container_name: keystone-app
+    links:
+      - redis
+      - mongo
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    restart: always
+    volumes:
+      - ./:/home/node:delegated
+    expose:
+      - 3000
+      - 9229
+    ports:
+      - 3000:3000
+      - 9229:9229
+    working_dir: /home/node
+    environment:
+      - NODE_ENV=local
+      - SESSION_HOST=keystone-cache
+      - SESSION_PORT=6379
+      - SESSION_DB=12
+      - CREATE_TABLES=true
+volumes:
+  db-redis:
+  db-mongo:
